@@ -1,6 +1,7 @@
 pub use framework::{
     day,
     error::{Error, Result},
+    iter::*,
     parser, standard_tests,
 };
 

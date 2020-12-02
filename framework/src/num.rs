@@ -25,12 +25,12 @@ pub trait PrimIntExt: PrimInt + std::fmt::Display {
 }
 
 macro_rules! impl_prim_int_ext {
-    ($(($unsigned:ty, $signed:ty, $bits:literal),)+) => {
+    ($(($unsigned:ty, $signed:ty),)+) => {
         $(
             impl PrimIntExt for $unsigned {
                 type Signed = $signed;
                 type Unsigned = $unsigned;
-                const BITS: usize = $bits;
+                const BITS: usize = std::mem::size_of::<$unsigned>() * 8;
                 #[inline(always)]
                 fn as_signed(self) -> Self::Signed { self as $signed }
                 #[inline(always)]
@@ -43,7 +43,7 @@ macro_rules! impl_prim_int_ext {
             impl PrimIntExt for $signed {
                 type Signed = $signed;
                 type Unsigned = $unsigned;
-                const BITS: usize = $bits;
+                const BITS: usize = std::mem::size_of::<$unsigned>() * 8;
                 #[inline(always)]
                 fn as_signed(self) -> Self::Signed { self }
                 #[inline(always)]
@@ -58,9 +58,10 @@ macro_rules! impl_prim_int_ext {
 }
 
 impl_prim_int_ext!(
-    (u8, i8, 8),
-    (u16, i16, 16),
-    (u32, i32, 32),
-    (u64, i64, 64),
-    (u128, i128, 128),
+    (u8, i8),
+    (u16, i16),
+    (u32, i32),
+    (u64, i64),
+    (u128, i128),
+    (usize, isize),
 );

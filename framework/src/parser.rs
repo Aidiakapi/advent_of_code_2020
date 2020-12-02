@@ -1,11 +1,11 @@
 use crate::num::PrimIntExt;
 pub use nom::{
-    bytes::complete::{tag, take},
+    bytes::complete::{tag, take, take_while},
     character::complete::digit1,
-    combinator::map_res,
     combinator::opt,
-    multi::{fold_many0, fold_many1, many0, many1, separated_list},
-    sequence::{pair, preceded, terminated},
+    combinator::{map, map_res},
+    multi::{fold_many0, fold_many1, many0, many1, separated_list1},
+    sequence::{pair, preceded, terminated, tuple},
 };
 use num_traits::{One, Signed, Unsigned, WrappingSub};
 
@@ -44,23 +44,31 @@ impl<T> ParseResultToResult for IResult<'_, T> {
                 if remainder.is_empty() {
                     Ok(output)
                 } else {
-                    Err(crate::error::Error::InvalidInput(format!(
+                    Err(crate::error::Error::InvalidInputDyn(format!(
                         "input not fully parsed, remainder: {:?}",
                         remainder
                     )))
                 }
             }
-            Err(x) => Err(crate::error::Error::InvalidInput(format!("{}", x))),
+            Err(x) => Err(crate::error::Error::InvalidInputDyn(format!("{}", x))),
         }
     }
 }
 
-pub fn newline<'a>(input: &'a [u8]) -> IResult<'a, ()> {
+pub fn newline(input: &[u8]) -> IResult<()> {
     if let Some(b'\n') = input.first() {
         Ok((&input[1..], ()))
     } else {
         Err(nom::Err::Error(AocParseError(input, AocErrorKind::Newline)))
     }
+}
+
+pub fn alpha(input: u8) -> bool {
+    (input >= b'a' && input <= b'z') || (input >= b'A' && input <= b'Z')
+}
+
+pub fn digit(input: u8) -> bool {
+    input >= b'0' && input <= b'9'
 }
 
 // Integer parsing
@@ -89,8 +97,8 @@ macro_rules! impl_take_sint {
     }
 }
 
-impl_take_uint!(u8, u16, u32, u64, u128);
-impl_take_sint!(i8, i16, i32, i64, i128);
+impl_take_uint!(u8, u16, u32, u64, u128, usize);
+impl_take_sint!(i8, i16, i32, i64, i128, isize);
 
 pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &[u8]) -> IResult<T> {
     if input.is_empty() {

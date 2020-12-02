@@ -4,6 +4,7 @@ pub use paste::paste;
 
 pub mod bootstrap;
 pub mod error;
+pub mod iter;
 pub mod num;
 pub mod parser;
 pub mod test;

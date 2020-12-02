@@ -7,5 +7,9 @@ pub enum Error {
     #[error("not implemented")]
     NotImplemented,
     #[error("invalid input: {0}")]
-    InvalidInput(String),
+    InvalidInput(&'static str),
+    #[error("invalid input: {0}")]
+    InvalidInputDyn(String),
+    #[error("no solution found")]
+    NoSolution,
 }

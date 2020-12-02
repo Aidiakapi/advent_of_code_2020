@@ -8,8 +8,9 @@ edition = "2018"
 
 [dependencies]
 arrayvec = "0.5"
-nom = "5.1"
+itertools = "0.9"
+nom = "6.0"
 num-traits = "0.2"
 paste = "1.0"
 thiserror = "1.0"
-ureq = "1.4"
+ureq = "1.5"

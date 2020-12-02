@@ -3,11 +3,11 @@ macro_rules! standard_tests {
     (
         !no_module
         $parser:ident [
-            $($parse_input:literal => $parse_output:expr)*
+            $($parse_input:expr => $parse_output:expr)*
         ]
         $(
             $part:ident [
-                $($input:literal => $output:expr)*
+                $($input:expr => $output:expr)*
             ]
         )+
     ) => {
@@ -18,7 +18,7 @@ macro_rules! standard_tests {
     };
 
     (@parser, $parser:ident) => {};
-    (@parser, $parser:ident $(, $input:literal => $output:expr)+) => {
+    (@parser, $parser:ident $(, $input:expr => $output:expr)+) => {
         $crate::paste! {
             #[test]
             fn [<$parser _test>]() -> Result<()> {
@@ -31,7 +31,7 @@ macro_rules! standard_tests {
     };
 
     (@part, $parser:ident, $part:ident) => {};
-    (@part, $parser:ident, $part:ident $(, $input:literal => $output:expr)+) => {
+    (@part, $parser:ident, $part:ident $(, $input:expr => $output:expr)+) => {
         $crate::paste! {
             #[test]
             fn [<$part _test>]() -> Result<()> {
@@ -47,11 +47,11 @@ macro_rules! standard_tests {
 
     (
         $parser:ident [
-            $($parse_input:literal => $parse_output:expr)*
+            $($parse_input:expr => $parse_output:expr)*
         ]
         $(
             $part:ident [
-                $($input:literal => $output:expr)*
+                $($input:expr => $output:expr)*
             ]
         )+
     ) => {

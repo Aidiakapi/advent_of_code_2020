@@ -1,5 +1,5 @@
 use crate::prelude::*;
-day!(1, parse => pt1, pt2);
+day!(1, parse_and_sort => pt1, pt2);
 
 /// Finds two numbers that sum to a target value, and returns the product of
 /// those two numbers. The input list must be sorted.
@@ -36,12 +36,12 @@ fn find_product_of_numbers_that_sum_to_target(target: u32, sorted_list: &[u32]) 
     None
 }
 
-pub fn pt1(input: &Vec<u32>) -> Result<u32> {
+pub fn pt1(input: &[u32]) -> Result<u32> {
     find_product_of_numbers_that_sum_to_target(2020, input)
-        .ok_or_else(|| Error::InvalidInput("No solution".to_owned()))
+        .ok_or(Error::NoSolution)
 }
 
-pub fn pt2(input: &Vec<u32>) -> Result<u32> {
+pub fn pt2(input: &[u32]) -> Result<u32> {
     for (i, a) in input.iter().cloned().enumerate() {
         if a > 2020 {
             break;
@@ -51,12 +51,12 @@ pub fn pt2(input: &Vec<u32>) -> Result<u32> {
             return Ok(product * a);
         }
     }
-    Err(Error::InvalidInput("No solution".to_owned()))
+    Err(Error::NoSolution)
 }
 
-pub fn parse(input: &[u8]) -> Result<Vec<u32>> {
+pub fn parse_and_sort(input: &[u8]) -> Result<Vec<u32>> {
     use framework::parser::*;
-    separated_list(newline, take_u32)(input)
+    separated_list1(newline, take_u32)(input)
         .into_result()
         .map(|mut input| {
             input.sort();
@@ -65,7 +65,7 @@ pub fn parse(input: &[u8]) -> Result<Vec<u32>> {
 }
 
 standard_tests!(
-    parse [
+    parse_and_sort [
         b"1721\n979\n366\n299\n675\n1456" => vec![299, 366, 675, 979, 1456, 1721]
     ]
     pt1 [
