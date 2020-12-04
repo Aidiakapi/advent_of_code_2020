@@ -54,9 +54,9 @@ pub fn pt2(input: &[u32]) -> Result<u32> {
     Err(Error::NoSolution)
 }
 
-pub fn parse_and_sort(input: &[u8]) -> Result<Vec<u32>> {
+pub fn parse_and_sort(input: &astr) -> Result<Vec<u32>> {
     use framework::parser::*;
-    separated_list1(newline, take_u32)(input)
+    separated_list1(char(achar::LineFeed), take_u32)(input)
         .into_result()
         .map(|mut input| {
             input.sort();

@@ -1,7 +1,18 @@
-#![feature(const_fn, optin_builtin_traits, negative_impls, never_type)]
+#![feature(
+    const_fn_fn_ptr_basics,
+    const_fn_transmute,
+    const_fn,
+    const_panic,
+    const_ptr_offset,
+    const_raw_ptr_deref,
+    negative_impls,
+    never_type,
+    optin_builtin_traits
+)]
 
 pub use paste::paste;
 
+pub mod ascii;
 pub mod bootstrap;
 pub mod error;
 pub mod iter;
@@ -10,6 +21,8 @@ pub mod parser;
 pub mod test;
 pub mod traits;
 pub mod vec2;
+
+use crate::ascii::*;
 
 use std::{
     fs,
@@ -41,7 +54,7 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) {
             }
         };
 
-        if input.last() == Some(&b'\n') {
+        if input.last() == Some(achar::LineFeed) {
             input.pop();
         }
 
@@ -86,9 +99,12 @@ fn get_day_input(
     throttle: &mut RequestThrottle,
     session_key: &mut SessionKey,
     day_nr: u32,
-) -> Option<Vec<u8>> {
+) -> Option<AString> {
     let file_path = get_day_input_path(day_nr);
-    if let Ok(contents) = fs::read(&file_path) {
+    if let Some(contents) = fs::read(&file_path)
+        .ok()
+        .and_then(|x| AString::from_ascii(x).ok())
+    {
         return Some(contents);
     }
 
@@ -127,14 +143,13 @@ fn get_day_input(
 
     let mut contents = Vec::new();
     resp.into_reader().read_to_end(&mut contents).ok()?;
-    if contents
-        .iter()
-        .find(|&&x| x >= 127 || (x < 0x20 && x != b'\n' && x != b'\t'))
-        .is_some()
-    {
-        eprintln!("response contains invalid ASCII character(s)");
-        return None;
-    }
+    let contents = match AString::from_ascii(contents) {
+        Ok(contents) => contents,
+        Err(_) => {
+            eprintln!("response contains invalid ASCII character(s)");
+            return None;
+        }
+    };
 
     let mut dir_path = file_path.clone();
     dir_path.pop();

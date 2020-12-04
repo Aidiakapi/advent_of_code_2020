@@ -1,32 +1,35 @@
+pub use crate::ascii::*;
 use crate::num::PrimIntExt;
 pub use nom::{
-    bytes::complete::{tag, take, take_while},
-    character::complete::digit1,
-    combinator::opt,
-    combinator::{map, map_res},
+    branch::alt,
+    combinator::{map, map_res, opt},
     multi::{fold_many0, fold_many1, many0, many1, separated_list1},
     sequence::{pair, preceded, terminated, tuple},
 };
 use num_traits::{One, Signed, Unsigned, WrappingSub};
 
-pub type IResult<'a, T> = nom::IResult<&'a [u8], T, AocParseError<'a>>;
+use nom::error::ErrorKind;
+
+pub type IResult<'a, T> = nom::IResult<&'a astr, T, AocParseError<'a>>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct AocParseError<'a>(&'a [u8], AocErrorKind);
+pub struct AocParseError<'a>(&'a astr, AocErrorKind);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AocErrorKind {
-    Nom(nom::error::ErrorKind),
+    NotFullyParsed,
+    Nom(ErrorKind),
     TakeUnsigned(&'static str),
     TakeSigned(&'static str),
-    Newline,
+    Whitespace,
+    Char,
 }
 
-impl<'a> nom::error::ParseError<&'a [u8]> for AocParseError<'a> {
-    fn from_error_kind(input: &'a [u8], kind: nom::error::ErrorKind) -> Self {
+impl<'a> nom::error::ParseError<&'a astr> for AocParseError<'a> {
+    fn from_error_kind(input: &'a astr, kind: ErrorKind) -> Self {
         AocParseError(input, AocErrorKind::Nom(kind))
     }
-    fn append(input: &'a [u8], kind: nom::error::ErrorKind, _other: Self) -> Self {
+    fn append(input: &'a astr, kind: ErrorKind, _other: Self) -> Self {
         AocParseError(input, AocErrorKind::Nom(kind))
     }
 }
@@ -36,7 +39,7 @@ pub trait ParseResultToResult {
     fn into_result(self) -> Result<Self::Output, crate::error::Error>;
 }
 
-impl<T> ParseResultToResult for IResult<'_, T> {
+impl<'a, T> ParseResultToResult for IResult<'a, T> {
     type Output = T;
     fn into_result(self) -> Result<T, crate::error::Error> {
         match self {
@@ -44,31 +47,186 @@ impl<T> ParseResultToResult for IResult<'_, T> {
                 if remainder.is_empty() {
                     Ok(output)
                 } else {
-                    Err(crate::error::Error::InvalidInputDyn(format!(
-                        "input not fully parsed, remainder: {:?}",
-                        remainder
-                    )))
+                    Err(crate::error::Error::ParseError(
+                        AocErrorKind::NotFullyParsed,
+                        remainder.to_owned(),
+                    ))
                 }
             }
-            Err(x) => Err(crate::error::Error::InvalidInputDyn(format!("{}", x))),
+            Err(nom_err) => match nom_err {
+                nom::Err::Incomplete(_) => panic!("do not use streaming parsing APIs"),
+                nom::Err::Error(AocParseError(remainder, err))
+                | nom::Err::Failure(AocParseError(remainder, err)) => {
+                    Err(crate::error::Error::ParseError(err, remainder.to_owned()))
+                }
+            },
         }
     }
 }
 
-pub fn newline(input: &[u8]) -> IResult<()> {
-    if let Some(b'\n') = input.first() {
-        Ok((&input[1..], ()))
-    } else {
-        Err(nom::Err::Error(AocParseError(input, AocErrorKind::Newline)))
+pub fn take(count: usize) -> impl Fn(&astr) -> IResult<&astr> {
+    move |input| {
+        if input.len() >= count {
+            Ok((&input[count..], &input[0..count]))
+        } else {
+            Err(nom::Err::Error(AocParseError(
+                input,
+                AocErrorKind::Nom(ErrorKind::Eof),
+            )))
+        }
     }
 }
 
-pub fn alpha(input: u8) -> bool {
-    (input >= b'a' && input <= b'z') || (input >= b'A' && input <= b'Z')
+pub fn anychar(input: &astr) -> IResult<achar> {
+    if let Some(char) = input.first() {
+        Ok((&input[1..], char))
+    } else {
+        Err(nom::Err::Error(AocParseError(
+            input,
+            AocErrorKind::Nom(ErrorKind::Eof),
+        )))
+    }
 }
 
-pub fn digit(input: u8) -> bool {
-    input >= b'0' && input <= b'9'
+pub fn char(expected: achar) -> impl Fn(&astr) -> IResult<achar> {
+    move |input| {
+        if let Some(char) = input.first() {
+            if char == expected {
+                return Ok((&input[1..], char));
+            }
+        }
+        Err(nom::Err::Error(AocParseError(
+            input,
+            AocErrorKind::Nom(ErrorKind::Char),
+        )))
+    }
+}
+
+pub fn tag<'a, 'b>(expected: &'a astr) -> impl Fn(&'b astr) -> IResult<&'b astr>
+where
+    'a: 'b,
+{
+    move |input| {
+        if input.len() < expected.len() {
+            Err(nom::Err::Error(AocParseError(
+                input,
+                AocErrorKind::Nom(ErrorKind::Eof),
+            )))
+        } else if &input[0..expected.len()] == expected {
+            Ok((&input[expected.len()..], &input[0..expected.len()]))
+        } else {
+            Err(nom::Err::Error(AocParseError(
+                input,
+                AocErrorKind::Nom(ErrorKind::Tag),
+            )))
+        }
+    }
+}
+
+pub fn take_while1<P>(predicate: P) -> impl Fn(&astr) -> IResult<&astr>
+where
+    P: Fn(achar) -> bool,
+{
+    move |input| {
+        let count = input.chars().take_while(|&char| predicate(char)).count();
+        if count == 0 {
+            Err(nom::Err::Error(AocParseError(
+                input,
+                AocErrorKind::Nom(ErrorKind::TakeWhile1),
+            )))
+        } else {
+            Ok((&input[count..], &input[0..count]))
+        }
+    }
+}
+
+fn split_at_position_complete<P>(input: &astr, predicate: P) -> IResult<&astr>
+where
+    P: Fn(achar) -> bool,
+{
+    use nom::InputTakeAtPosition;
+    unsafe {
+        input
+            .as_bytes()
+            .split_at_position_complete(|item| predicate(achar::from_ascii_unchecked(item)))
+            .map(|(remainder, result)| {
+                (
+                    astr::from_ascii_unchecked(remainder),
+                    astr::from_ascii_unchecked(result),
+                )
+            })
+            .map_err(|err: nom::Err<(&[u8], ErrorKind)>| {
+                err.map(|err| {
+                    AocParseError(astr::from_ascii_unchecked(err.0), AocErrorKind::Nom(err.1))
+                })
+            })
+    }
+}
+
+fn split_at_position1_complete<P>(
+    input: &astr,
+    predicate: P,
+    error_kind: ErrorKind,
+) -> IResult<&astr>
+where
+    P: Fn(achar) -> bool,
+{
+    use nom::InputTakeAtPosition;
+    unsafe {
+        input
+            .as_bytes()
+            .split_at_position1_complete(
+                |item| predicate(achar::from_ascii_unchecked(item)),
+                error_kind,
+            )
+            .map(|(remainder, result)| {
+                (
+                    astr::from_ascii_unchecked(remainder),
+                    astr::from_ascii_unchecked(result),
+                )
+            })
+            .map_err(|err: nom::Err<(&[u8], ErrorKind)>| {
+                err.map(|err| {
+                    AocParseError(astr::from_ascii_unchecked(err.0), AocErrorKind::Nom(err.1))
+                })
+            })
+    }
+}
+
+pub fn newline0(input: &astr) -> IResult<&astr> {
+    split_at_position_complete(input, |item| item != achar::LineFeed)
+}
+
+pub fn newline1(input: &astr) -> IResult<&astr> {
+    split_at_position1_complete(input, |item| item != achar::LineFeed, ErrorKind::TakeWhile1)
+}
+
+pub fn alpha0(input: &astr) -> IResult<&astr> {
+    split_at_position_complete(input, |item| !item.is_alphabetic())
+}
+
+pub fn alpha1(input: &astr) -> IResult<&astr> {
+    split_at_position1_complete(input, |item| !item.is_ascii_alphabetic(), ErrorKind::Alpha)
+}
+
+pub fn digit0(input: &astr) -> IResult<&astr> {
+    split_at_position_complete(input, |item| !item.is_ascii_digit())
+}
+
+pub fn digit1(input: &astr) -> IResult<&astr> {
+    split_at_position1_complete(input, |item| !item.is_ascii_digit(), ErrorKind::Digit)
+}
+
+pub fn whitespace0(input: &astr) -> IResult<&astr> {
+    split_at_position_complete(input, |item| !item.is_whitespace())
+}
+
+pub fn whitespace1(input: &astr) -> IResult<&astr> {
+    split_at_position1_complete(
+        input,
+        |item| !item.is_ascii_whitespace(),
+        ErrorKind::TakeWhile1,
+    )
 }
 
 // Integer parsing
@@ -77,7 +235,7 @@ macro_rules! impl_take_uint {
     ($($ty_ident:ident),+$(,)?) => {
         $crate::paste! {
             $(
-                pub fn [<take_ $ty_ident>]<'a>(input: &'a [u8]) -> IResult<'a, $ty_ident> {
+                pub fn [<take_ $ty_ident>]<'a>(input: &'a astr) -> IResult<'a, $ty_ident> {
                     take_unsigned::<$ty_ident>(input)
                 }
             )+
@@ -89,7 +247,7 @@ macro_rules! impl_take_sint {
     ($($ty_ident:ident),+$(,)?) => {
         $crate::paste! {
             $(
-                pub fn [<take_ $ty_ident>]<'a>(input: &'a [u8]) -> IResult<'a, $ty_ident> {
+                pub fn [<take_ $ty_ident>]<'a>(input: &'a astr) -> IResult<'a, $ty_ident> {
                     take_signed::<$ty_ident>(input)
                 }
             )+
@@ -100,7 +258,7 @@ macro_rules! impl_take_sint {
 impl_take_uint!(u8, u16, u32, u64, u128, usize);
 impl_take_sint!(i8, i16, i32, i64, i128, isize);
 
-pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &[u8]) -> IResult<T> {
+pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &astr) -> IResult<T> {
     if input.is_empty() {
         return Err(nom::Err::Error(AocParseError(
             input,
@@ -112,11 +270,11 @@ pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &[u8]) -> IResult<T> {
         AocErrorKind::TakeUnsigned("overflow parsing number"),
     ));
     let mut nr = T::zero();
-    while let Some(char) = input.first().cloned() {
+    while let Some(char) = input.first() {
         if char < b'0' || char > b'9' {
             break;
         }
-        let digit = char - b'0';
+        let digit = char.as_byte() - b'0';
         nr = nr
             .checked_mul(&T::from(10u8).unwrap())
             .ok_or_else(|| overflow_error.clone())?
@@ -139,7 +297,7 @@ fn unsigned_err_to_signed_err<'a>(err: nom::Err<AocParseError<'a>>) -> nom::Err<
     })
 }
 
-pub fn take_signed<T: PrimIntExt + Signed>(input: &[u8]) -> IResult<T> {
+pub fn take_signed<T: PrimIntExt + Signed>(input: &astr) -> IResult<T> {
     if input.is_empty() {
         return Err(nom::Err::Error(AocParseError(
             input,
@@ -169,17 +327,35 @@ pub fn take_signed<T: PrimIntExt + Signed>(input: &[u8]) -> IResult<T> {
 mod test {
     use super::*;
 
+    macro_rules! empty_str {
+        () => {
+            astr::from_ascii(b"").unwrap()
+        };
+    }
+
     #[test]
     fn take_uint() {
-        assert_eq!(take_u8(b"0"), Ok((&b""[..], 0u8)));
-        assert_eq!(take_u8(b"128"), Ok((&b""[..], 128u8)));
-        assert!(take_u8(b"256").is_err());
+        assert_eq!(
+            take_u8(astr::from_ascii(b"0").unwrap()),
+            Ok((empty_str!(), 0u8))
+        );
+        assert_eq!(
+            take_u8(astr::from_ascii(b"128").unwrap()),
+            Ok((empty_str!(), 128u8))
+        );
+        assert!(take_u8(astr::from_ascii(b"256").unwrap()).is_err());
     }
 
     #[test]
     fn take_sint() {
-        assert_eq!(take_i8(b"-128"), Ok((&b""[..], -128i8)));
-        assert_eq!(take_i8(b"127"), Ok((&b""[..], 127i8)));
-        assert!(take_i8(b"128").is_err());
+        assert_eq!(
+            take_i8(astr::from_ascii(b"-128").unwrap()),
+            Ok((empty_str!(), -128i8))
+        );
+        assert_eq!(
+            take_i8(astr::from_ascii(b"127").unwrap()),
+            Ok((empty_str!(), 127i8))
+        );
+        assert!(take_i8(astr::from_ascii(b"128").unwrap()).is_err());
     }
 }

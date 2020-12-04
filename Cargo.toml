@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies]
 arrayvec = "0.5"
+ascii = "1.0"
+lazy_static = "1.4"
 nom = "6.0"
 num-traits = "0.2"
 

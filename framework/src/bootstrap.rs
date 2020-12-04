@@ -23,7 +23,7 @@ macro_rules! day {
             #[allow(unreachable_code)]
             fn evaluate(
                 &self,
-                input: Vec<u8>,
+                input: $crate::ascii::AString,
             ) -> arrayvec::ArrayVec<[(&'static str, Result<String>); 2]> {
                 use framework::traits::{IntoError, IntoResult};
                 let mut res = arrayvec::ArrayVec::<[(&'static str, Result<String>); 2]>::new();

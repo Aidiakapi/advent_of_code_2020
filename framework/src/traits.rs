@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::{error::Error, AString};
 use arrayvec::ArrayVec;
 
 pub trait IntoResult {
@@ -15,10 +15,11 @@ impl<I, E> IntoResult for Result<I, E> {
     }
 }
 
+// FIXME: Change this to return the never type when issues with this are fix
 impl<I: IsNotResult> IntoResult for I {
     type Item = I;
-    type Error = !;
-    fn into_result(self) -> Result<Self, !> {
+    type Error = crate::error::Error;
+    fn into_result(self) -> Result<Self, crate::error::Error> {
         Ok(self)
     }
 }
@@ -44,5 +45,5 @@ impl IntoError for Error {
 
 pub trait Day {
     fn nr(&self) -> u32;
-    fn evaluate(&self, input: Vec<u8>) -> ArrayVec<[(&'static str, Result<String, Error>); 2]>;
+    fn evaluate(&self, input: AString) -> ArrayVec<[(&'static str, Result<String, Error>); 2]>;
 }

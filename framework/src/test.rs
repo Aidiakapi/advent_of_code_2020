@@ -23,7 +23,9 @@ macro_rules! standard_tests {
             #[test]
             fn [<$parser _test>]() -> Result<()> {
                 $(
-                    assert_eq!($output, $crate::traits::IntoResult::into_result($parser($input))?);
+                    let ascii_str = astr::from_ascii($input)?;
+                    let result = $crate::traits::IntoResult::into_result($parser(ascii_str))?;
+                    assert_eq!(result, $output);
                 )+
                 Ok(())
             }
@@ -36,9 +38,10 @@ macro_rules! standard_tests {
             #[test]
             fn [<$part _test>]() -> Result<()> {
                 $(
-                    let input = $crate::traits::IntoResult::into_result($parser($input))?;
+                    let ascii_str = $crate::ascii::astr::from_ascii($input)?;
+                    let input = $crate::traits::IntoResult::into_result($parser(ascii_str))?;
                     let output = $crate::traits::IntoResult::into_result($part(&input))?;
-                    assert_eq!($output, output);
+                    assert_eq!(output, $output);
                 )+
                 Ok(())
             }

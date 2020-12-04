@@ -1,10 +1,11 @@
 pub use framework::{
-    day,
+    ascii::*,
+    astr, day,
     error::{Error, Result},
     iter::*,
     parser, standard_tests,
 };
-
+pub use lazy_static::lazy_static;
 
 pub trait ResultWhereValueIsErrorExt {
     type Type;
