@@ -6,4 +6,5 @@ framework::main! {
     day01
     day02
     day04
+    day05
 }
