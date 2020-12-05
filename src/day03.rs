@@ -2,7 +2,6 @@ use crate::prelude::*;
 day!(3, parse => pt1, pt2);
 
 #[derive(Copy, Clone, Eq, PartialEq)]
-#[repr(u8)]
 pub enum Cell {
     Open,
     Tree,
@@ -21,14 +20,11 @@ pub fn pt1(input: &[Vec<Cell>]) -> usize {
 }
 
 pub fn pt2(input: &[Vec<Cell>]) -> usize {
-    let encountered = [
-        count_trees_at_slope(input, 1, 1),
-        count_trees_at_slope(input, 3, 1),
-        count_trees_at_slope(input, 5, 1),
-        count_trees_at_slope(input, 7, 1),
-        count_trees_at_slope(input, 1, 2),
-    ];
-    encountered.iter().product()
+    let slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
+    slopes
+        .iter()
+        .map(|&(x_step, y_step)| count_trees_at_slope(input, x_step, y_step))
+        .product()
 }
 
 pub fn parse(input: &astr) -> Result<Vec<Vec<Cell>>> {
@@ -42,33 +38,22 @@ pub fn parse(input: &astr) -> Result<Vec<Vec<Cell>>> {
     separated_list1(char(achar::LineFeed), many1(cell))(input).into_result()
 }
 
+#[cfg(test)]
+const EXAMPLE: &str = "\
+..##.......
+#...#...#..
+.#....#..#.
+..#.#...#.#
+.#...##..#.
+..#.##.....
+.#.#.#....#
+.#........#
+#.##...#...
+#...##....#
+.#..#...#.#";
+
 standard_tests!(
     parse []
-    pt1 [
-"\
-..##.......
-#...#...#..
-.#....#..#.
-..#.#...#.#
-.#...##..#.
-..#.##.....
-.#.#.#....#
-.#........#
-#.##...#...
-#...##....#
-.#..#...#.#" => 7
-    ]
-    pt2 [
-"\
-..##.......
-#...#...#..
-.#....#..#.
-..#.#...#.#
-.#...##..#.
-..#.##.....
-.#.#.#....#
-.#........#
-#.##...#...
-#...##....#
-.#..#...#.#" => 336]
+    pt1 [ EXAMPLE => 7 ]
+    pt2 [ EXAMPLE => 336 ]
 );

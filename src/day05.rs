@@ -2,10 +2,9 @@ use crate::prelude::*;
 day!(5, parse => pt1, pt2);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-#[repr(u8)]
 pub enum Partition {
-    Low = 0,
-    High = 1,
+    Low,
+    High,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
