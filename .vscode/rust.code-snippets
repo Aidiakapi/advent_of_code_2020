@@ -1,6 +1,6 @@
 {
     "day": {
         "prefix": "day",
-        "body": "use crate::prelude::*;\nday!(${1}, parse => pt1, pt2);\n\npub fn pt1(input: &${2:Vec<u8>}) -> Result<!> {\n    Err(Error::NotImplemented)\n}\n\npub fn pt2(input: &${2}) -> Result<!> {\n    Err(Error::NotImplemented)\n}\n\npub fn parse(input: &[u8]) -> Result<${2}> {\n    ${3:Err(Error::NotImplemented)}\n}\n\nstandard_tests!(\n    parse []\n    pt1 []\n    pt2 []\n);\n"
+        "body": "use crate::prelude::*;\nday!(${1}, parse => pt1, pt2);\n\npub fn pt1(input: &${2:Vec<&astr>}) -> Result<!> {\n    Err(Error::NotImplemented)\n}\n\npub fn pt2(input: &${2}) -> Result<!> {\n    Err(Error::NotImplemented)\n}\n\npub fn parse(input: &astr) -> Result<${2}> {\n    use framework::parser::*;\n    ${3:Err(Error::NotImplemented)}\n}\n\nstandard_tests!(\n    parse []\n    pt1 []\n    pt2 []\n);\n"
     }
 }
