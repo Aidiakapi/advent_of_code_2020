@@ -29,7 +29,7 @@ fn find_product_of_numbers_that_sum_to_target(target: u32, sorted_list: &[u32]) 
             break;
         }
         let b = target - a;
-        if let Ok(_) = slice[i + 1..].binary_search(&b) {
+        if slice[i + 1..].binary_search(&b).is_ok() {
             return Some(a * b);
         }
     }
@@ -59,7 +59,7 @@ pub fn parse_and_sort(input: &astr) -> Result<Vec<u32>> {
     separated_list1(char(achar::LineFeed), take_u32)(input)
         .into_result()
         .map(|mut input| {
-            input.sort();
+            input.sort_unstable();
             input
         })
 }

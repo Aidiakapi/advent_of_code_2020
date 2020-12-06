@@ -26,11 +26,11 @@ fn is_valid_pt2((policy, input): &Input) -> Result<bool> {
 }
 
 pub fn pt1(input: &[Input]) -> usize {
-    input.into_iter().count_if(is_valid_pt1)
+    input.iter().count_if(is_valid_pt1)
 }
 
 pub fn pt2(input: &[Input]) -> Result<usize> {
-    input.into_iter().count_if_res(is_valid_pt2)
+    input.iter().count_if_res(is_valid_pt2)
 }
 
 pub fn parse(input: &astr) -> Result<Vec<Input>> {

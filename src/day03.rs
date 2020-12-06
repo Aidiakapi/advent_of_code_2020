@@ -7,23 +7,29 @@ pub enum Cell {
     Tree,
 }
 
-pub fn count_trees_at_slope(input: &[Vec<Cell>], x_step: usize, y_step: usize) -> usize {
-    let x = (0..).step_by(x_step);
-    let y = input.iter().step_by(y_step);
+pub fn count_trees_at_slope(input: &[Vec<Cell>], step: usizex2) -> usize {
+    let x = (0..).step_by(step.x);
+    let y = input.iter().step_by(step.y);
     x.zip(y)
         .skip(1)
         .count_if(|(x, row)| row[x % row.len()] == Cell::Tree)
 }
 
 pub fn pt1(input: &[Vec<Cell>]) -> usize {
-    count_trees_at_slope(input, 3, 1)
+    count_trees_at_slope(input, vec2!(3, 1))
 }
 
 pub fn pt2(input: &[Vec<Cell>]) -> usize {
-    let slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
+    let slopes = [
+        vec2!(1, 1),
+        vec2!(3, 1),
+        vec2!(5, 1),
+        vec2!(7, 1),
+        vec2!(1, 2),
+    ];
     slopes
         .iter()
-        .map(|&(x_step, y_step)| count_trees_at_slope(input, x_step, y_step))
+        .map(|&step| count_trees_at_slope(input, step))
         .product()
 }
 

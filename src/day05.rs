@@ -36,7 +36,7 @@ impl SeatCode {
     }
 }
 
-pub fn pt1(input: &Vec<SeatCode>) -> Result<u32> {
+pub fn pt1(input: &[SeatCode]) -> Result<u32> {
     input
         .iter()
         .map(SeatCode::to_id)
@@ -44,7 +44,7 @@ pub fn pt1(input: &Vec<SeatCode>) -> Result<u32> {
         .ok_or(Error::NoSolution)
 }
 
-pub fn pt2(input: &Vec<SeatCode>) -> Result<u32> {
+pub fn pt2(input: &[SeatCode]) -> Result<u32> {
     let mut seat_ids = input.iter().map(SeatCode::to_id).collect::<Vec<_>>();
     seat_ids.sort_unstable();
     seat_ids

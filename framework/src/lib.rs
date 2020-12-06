@@ -20,7 +20,6 @@ pub mod num;
 pub mod parser;
 pub mod test;
 pub mod traits;
-pub mod vec2;
 
 use crate::ascii::*;
 

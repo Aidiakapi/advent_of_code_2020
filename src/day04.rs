@@ -44,28 +44,26 @@ fn is_valid_passport(passport: &Passport) -> bool {
             b"byr" => is_number_in_range(value, 1920, 2002),
             b"iyr" => is_number_in_range(value, 2010, 2020),
             b"eyr" => is_number_in_range(value, 2020, 2030),
-            b"hgt" => loop {
-                if value.len() < 3 {
-                    break false;
-                }
+            b"hgt" if value.len() < 3 => false,
+            b"hgt" => {
                 let unit = &value[value.len() - 2..];
                 let value = &value[..value.len() - 2];
-                break match unit.as_bytes() {
+                match unit.as_bytes() {
                     b"cm" => is_number_in_range(value, 150, 193),
                     b"in" => is_number_in_range(value, 59, 76),
                     _ => false,
-                };
-            },
+                }
+            }
             b"hcl" => {
                 value.len() == 7
                     && value[1..].chars().all(|char| {
                         char.is_ascii_digit() || (char.is_lowercase() && char.is_digit(16))
                     })
             }
-            b"ecl" => match value.as_bytes() {
-                b"amb" | b"blu" | b"brn" | b"gry" | b"grn" | b"hzl" | b"oth" => true,
-                _ => false,
-            },
+            b"ecl" => matches!(
+                value.as_bytes(),
+                b"amb" | b"blu" | b"brn" | b"gry" | b"grn" | b"hzl" | b"oth"
+            ),
             b"pid" => value.len() == 9 && value.chars().all(|char| char.is_ascii_digit()),
             _ => continue,
         };
@@ -76,11 +74,11 @@ fn is_valid_passport(passport: &Passport) -> bool {
     true
 }
 
-pub fn pt1(input: &Vec<Passport>) -> usize {
+pub fn pt1(input: &[Passport]) -> usize {
     input.iter().count_if(has_expected_fields)
 }
 
-pub fn pt2(input: &Vec<Passport>) -> usize {
+pub fn pt2(input: &[Passport]) -> usize {
     input.iter().count_if(is_valid_passport)
 }
 

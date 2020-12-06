@@ -1,3 +1,4 @@
+pub use data_structures::{vec2, vec3, vector::*};
 pub use framework::{
     ascii::{achar, astr, AString, AsciiStrExt},
     astr, day,

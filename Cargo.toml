@@ -17,7 +17,11 @@ num-traits = "0.2"
 [dependencies.framework]
 path = "./framework"
 
+[dependencies.data_structures]
+path = "./data_structures"
+
 [workspace]
 members = [
     "framework",
+    "data_structures",
 ]
