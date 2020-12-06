@@ -1,10 +1,11 @@
 pub use framework::{
-    ascii::*,
+    ascii::{achar, astr, AString, AsciiStrExt},
     astr, day,
     error::{Error, Result},
     iter::*,
     parser, standard_tests,
 };
+pub use itertools::Itertools;
 pub use lazy_static::lazy_static;
 
 pub trait ResultWhereValueIsErrorExt {

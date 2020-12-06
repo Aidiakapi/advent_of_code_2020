@@ -14,24 +14,15 @@ pub struct SeatCode {
 }
 
 fn binary_partition(partitions: &[Partition]) -> u32 {
-    assert!(!partitions.is_empty());
-    let mut min = 0;
-    let mut max = (1 << partitions.len()) - 1;
-    let mut partition_size = 1 << (partitions.len() - 1);
+    assert!(partitions.len() <= 32);
+    let mut result = 0u32;
+    let mut current_bit = 1 << (partitions.len() - 1);
     for &partition in partitions.iter() {
-        match partition {
-            Partition::Low => {
-                max -= partition_size;
-            }
-            Partition::High => {
-                min += partition_size;
-            }
-        }
-        partition_size /= 2;
+        result |= current_bit & (-(partition as i32) as u32);
+        current_bit >>= 1;
     }
-    debug_assert!(min == max);
-    debug_assert!(partition_size == 0);
-    min
+    debug_assert!(current_bit == 0);
+    result
 }
 
 impl SeatCode {
