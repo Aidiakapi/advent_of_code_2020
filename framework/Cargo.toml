@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 arrayvec = "0.5"
+colored = "2.0"
 itertools = "0.9"
 nom = "6.0"
 num-traits = "0.2"

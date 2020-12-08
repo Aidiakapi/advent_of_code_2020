@@ -29,6 +29,15 @@ use std::{
 };
 
 pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), error::Error> {
+    use colored::Colorize;
+    println!(
+        "{} {} {} {}",
+        "Advent".bright_red().bold(),
+        "of".bright_white(),
+        "Code".bright_green().bold(),
+        "2020".bright_blue()
+    );
+
     let session_key = &mut SessionKey::default();
     let throttle = &mut RequestThrottle::default();
 
@@ -50,12 +59,18 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), erro
 
         let results = day.evaluate(input);
         for result in results {
+            let day_ident = format!("day{:0>2}", day_nr).bright_blue();
+            let pt_ident = result.0.bright_green();
             match result.1 {
                 Ok(value) => {
-                    println!("day{:0>2}::{}\n{}", day_nr, result.0, value);
+                    let value = value.bright_white().bold();
+                    let separator = if value.contains('\n') { '\n' } else { ' ' };
+                    println!("{} {}{}{}", day_ident, pt_ident, separator, value);
                 }
                 Err(err) => {
-                    eprintln!("day{:0>2}::{}\n{}", day_nr, result.0, err);
+                    let value = err.to_string().bright_red().bold().underline();
+                    let separator = if value.contains('\n') { '\n' } else { ' ' };
+                    eprintln!("{} {}{}{}", day_ident, pt_ident, separator, value);
                 }
             }
         }
