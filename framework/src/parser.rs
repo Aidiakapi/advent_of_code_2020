@@ -306,8 +306,12 @@ pub fn take_signed<T: PrimIntExt + Signed>(input: &astr) -> IResult<T> {
     }
     let is_negative = input[0] == b'-';
     let (remainder, mut unsigned) =
-        take_unsigned::<T::Unsigned>(if is_negative { &input[1..] } else { input })
-            .map_err(unsigned_err_to_signed_err)?;
+        take_unsigned::<T::Unsigned>(if is_negative || input[0] == b'+' {
+            &input[1..]
+        } else {
+            input
+        })
+        .map_err(unsigned_err_to_signed_err)?;
     if is_negative {
         unsigned = unsigned.wrapping_sub(&T::Unsigned::one());
     }
