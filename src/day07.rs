@@ -11,15 +11,15 @@ pub struct Constraint<'s> {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct BagType<'s> {
-    tone: &'s astr,
-    color: &'s astr,
+    tone: &'s str,
+    color: &'s str,
 }
 
 pub fn pt1(constraints: &[Constraint]) -> usize {
     let mut potential_containers = HashSet::<BagType>::new();
     potential_containers.insert(BagType {
-        tone: astr!(b"shiny"),
-        color: astr!(b"gold"),
+        tone: "shiny",
+        color: "gold",
     });
     let mut additions = HashSet::<BagType>::new();
     loop {
@@ -52,54 +52,66 @@ pub fn pt2(constraints: &[Constraint]) -> u64 {
         .collect::<HashMap<_, _>>();
 
     let mut cache = HashMap::with_capacity(constraints.len());
-    fn count_required_bags<'s, 'c>(constraints: &'s HashMap<BagType<'s>, Vec<(u32, BagType)>>, cache: &'c mut HashMap<BagType<'s>, u64>, bag_type: &'s BagType) -> u64
+    fn count_required_bags<'s, 'c>(
+        constraints: &'s HashMap<BagType<'s>, Vec<(u32, BagType)>>,
+        cache: &'c mut HashMap<BagType<'s>, u64>,
+        bag_type: &'s BagType,
+    ) -> u64
     where
-        's: 'c
+        's: 'c,
     {
         if let Some(&cached_value) = cache.get(bag_type) {
             return cached_value;
         }
-        let result = constraints[bag_type].iter()
-            .map(|(required_count, required_type)| *required_count as u64 * (1 + count_required_bags(constraints, cache, required_type)))
+        let result = constraints[bag_type]
+            .iter()
+            .map(|(required_count, required_type)| {
+                *required_count as u64
+                    * (1 + count_required_bags(constraints, cache, required_type))
+            })
             .sum();
         cache.insert(*bag_type, result);
         result
     }
-    
-    count_required_bags(&constraints, &mut cache, &BagType {
-        tone: astr!(b"shiny"),
-        color: astr!(b"gold"),
-    })
+
+    count_required_bags(
+        &constraints,
+        &mut cache,
+        &BagType {
+            tone: "shiny",
+            color: "gold",
+        },
+    )
 }
 
-pub fn parse(input: &astr) -> Result<Vec<Constraint>> {
+pub fn parse(input: &str) -> Result<Vec<Constraint>> {
     use framework::parser::*;
-    fn bag_type(input: &astr) -> IResult<BagType> {
+    fn bag_type(input: &str) -> IResult<BagType> {
         map(
             pair(
-                terminated(alpha1, char(achar::Space)),
-                terminated(alpha1, pair(tag(astr!(b" bag")), opt(char(achar::s)))),
+                terminated(alpha1, char(' ')),
+                terminated(alpha1, pair(tag(" bag"), opt(char('s')))),
             ),
             |(tone, color)| BagType { tone, color },
         )(input)
     }
-    let requirement = pair(terminated(take_u32, char(achar::Space)), bag_type);
+    let requirement = pair(terminated(take_u32, char(' ')), bag_type);
     let requirements = alt((
-        separated_list1(tag(astr!(b", ")), requirement),
-        map(tag(astr!(b"no other bags")), |_| Vec::new()),
+        separated_list1(tag(", "), requirement),
+        map(tag("no other bags"), |_| Vec::new()),
     ));
     let constraint = map(
         pair(
-            terminated(bag_type, tag(astr!(b" contain "))),
-            terminated(requirements, char(achar::Dot)),
+            terminated(bag_type, tag(" contain ")),
+            terminated(requirements, char('.')),
         ),
         |(target, requires)| Constraint { target, requires },
     );
-    separated_list1(char(achar::LineFeed), constraint)(input).into_result()
+    separated_list1(char('\n'), constraint)(input).into_result()
 }
 
 #[cfg(test)]
-const COMMON_EXAMPLE: &[u8] = b"\
+const COMMON_EXAMPLE: &str = "\
 light red bags contain 1 bright white bag, 2 muted yellow bags.
 dark orange bags contain 3 bright white bags, 4 muted yellow bags.
 bright white bags contain 1 shiny gold bag.
@@ -114,7 +126,7 @@ standard_tests!(
     parse []
     pt1 [ COMMON_EXAMPLE => 4 ]
     pt2 [ COMMON_EXAMPLE => 32
-        b"\
+        "\
 shiny gold bags contain 2 dark red bags.
 dark red bags contain 2 dark orange bags.
 dark orange bags contain 2 dark yellow bags.

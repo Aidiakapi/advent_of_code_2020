@@ -61,7 +61,9 @@ pub fn get_acc_when_looping(instructions: &[Instruction]) -> std::result::Result
 }
 
 pub fn pt1(instructions: &[Instruction]) -> Result<Int> {
-    get_acc_when_looping(instructions).ok().ok_or(Error::NoSolution)
+    get_acc_when_looping(instructions)
+        .ok()
+        .ok_or(Error::NoSolution)
 }
 
 pub fn pt2(instructions: &[Instruction]) -> Result<Int> {
@@ -74,7 +76,7 @@ pub fn pt2(instructions: &[Instruction]) -> Result<Int> {
             Instruction::jmp(n) => Instruction::nop(n),
             Instruction::nop(n) => Instruction::jmp(n),
         };
-        
+
         instructions[i] = new;
         if let Err(state) = get_acc_when_looping(&instructions) {
             if state.ip == expected_ip {
@@ -86,23 +88,23 @@ pub fn pt2(instructions: &[Instruction]) -> Result<Int> {
     Err(Error::NoSolution)
 }
 
-pub fn parse(input: &astr) -> Result<Vec<Instruction>> {
+pub fn parse(input: &str) -> Result<Vec<Instruction>> {
     use framework::parser::*;
-    let instr_tag = alt((tag(astr!(b"acc")), tag(astr!(b"jmp")), tag(astr!(b"nop"))));
+    let instr_tag = alt((tag("acc"), tag("jmp"), tag("nop")));
     let instr = map(
-        pair(terminated(instr_tag, char(achar::Space)), take_i64),
-        |(tag, nr)| match tag.as_bytes() {
-            b"acc" => Instruction::acc(nr),
-            b"jmp" => Instruction::jmp(nr),
-            b"nop" => Instruction::nop(nr),
+        pair(terminated(instr_tag, char(' ')), take_i64),
+        |(tag, nr)| match tag {
+            "acc" => Instruction::acc(nr),
+            "jmp" => Instruction::jmp(nr),
+            "nop" => Instruction::nop(nr),
             _ => unreachable!(),
         },
     );
-    separated_list1(char(achar::LineFeed), instr)(input).into_result()
+    separated_list1(char('\n'), instr)(input).into_result()
 }
 
 #[cfg(test)]
-const EXAMPLE: &[u8] = b"\
+const EXAMPLE: &str = "\
 nop +0
 acc +1
 jmp +4

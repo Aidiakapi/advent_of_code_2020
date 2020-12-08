@@ -1,4 +1,4 @@
-use crate::{error::Error, AString};
+use crate::error::Error;
 use arrayvec::ArrayVec;
 
 pub trait IntoResult {
@@ -45,5 +45,5 @@ impl IntoError for Error {
 
 pub trait Day {
     fn nr(&self) -> u32;
-    fn evaluate(&self, input: AString) -> ArrayVec<[(&'static str, Result<String, Error>); 2]>;
+    fn evaluate(&self, input: String) -> ArrayVec<[(&'static str, Result<String, Error>); 2]>;
 }

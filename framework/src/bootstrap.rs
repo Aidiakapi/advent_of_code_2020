@@ -3,10 +3,10 @@ macro_rules! main {
     ($($day:ident)+) => {
         $(mod $day;)+
 
-        pub fn main() {
+        pub fn main() -> ::std::result::Result<(), $crate::error::Error> {
             $crate::run(&[
                 $((stringify!($day), $day::DAY_SPEC),)+
-            ]);
+            ])
         }
     };
 }
@@ -23,7 +23,7 @@ macro_rules! day {
             #[allow(unreachable_code)]
             fn evaluate(
                 &self,
-                input: $crate::ascii::AString,
+                input: String,
             ) -> arrayvec::ArrayVec<[(&'static str, Result<String>); 2]> {
                 use framework::traits::{IntoError, IntoResult};
                 let mut res = arrayvec::ArrayVec::<[(&'static str, Result<String>); 2]>::new();

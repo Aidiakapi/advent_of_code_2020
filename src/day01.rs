@@ -37,8 +37,7 @@ fn find_product_of_numbers_that_sum_to_target(target: u32, sorted_list: &[u32]) 
 }
 
 pub fn pt1(input: &[u32]) -> Result<u32> {
-    find_product_of_numbers_that_sum_to_target(2020, input)
-        .ok_or(Error::NoSolution)
+    find_product_of_numbers_that_sum_to_target(2020, input).ok_or(Error::NoSolution)
 }
 
 pub fn pt2(input: &[u32]) -> Result<u32> {
@@ -54,9 +53,9 @@ pub fn pt2(input: &[u32]) -> Result<u32> {
     Err(Error::NoSolution)
 }
 
-pub fn parse_and_sort(input: &astr) -> Result<Vec<u32>> {
+pub fn parse_and_sort(input: &str) -> Result<Vec<u32>> {
     use framework::parser::*;
-    separated_list1(char(achar::LineFeed), take_u32)(input)
+    separated_list1(char('\n'), take_u32)(input)
         .into_result()
         .map(|mut input| {
             input.sort_unstable();
@@ -66,12 +65,12 @@ pub fn parse_and_sort(input: &astr) -> Result<Vec<u32>> {
 
 standard_tests!(
     parse_and_sort [
-        b"1721\n979\n366\n299\n675\n1456" => vec![299, 366, 675, 979, 1456, 1721]
+        "1721\n979\n366\n299\n675\n1456" => vec![299, 366, 675, 979, 1456, 1721]
     ]
     pt1 [
-        b"1721\n979\n366\n299\n675\n1456" => 514579
+        "1721\n979\n366\n299\n675\n1456" => 514579
     ]
     pt2 [
-        b"1721\n979\n366\n299\n675\n1456" => 241861950
+        "1721\n979\n366\n299\n675\n1456" => 241861950
     ]
 );

@@ -33,15 +33,15 @@ pub fn pt2(input: &[Vec<Cell>]) -> usize {
         .product()
 }
 
-pub fn parse(input: &astr) -> Result<Vec<Vec<Cell>>> {
+pub fn parse(input: &str) -> Result<Vec<Vec<Cell>>> {
     use framework::parser::*;
-    fn cell(input: &astr) -> IResult<Cell> {
+    fn cell(input: &str) -> IResult<Cell> {
         alt((
-            map(char(achar::Dot), |_| Cell::Open),
-            map(char(achar::Hash), |_| Cell::Tree),
+            map(char('.'), |_| Cell::Open),
+            map(char('#'), |_| Cell::Tree),
         ))(input)
     }
-    separated_list1(char(achar::LineFeed), many1(cell))(input).into_result()
+    separated_list1(char('\n'), many1(cell))(input).into_result()
 }
 
 #[cfg(test)]

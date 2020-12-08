@@ -1,11 +1,12 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 use crate::prelude::*;
 day!(6, parse => pt1, pt2);
 
-pub fn pt1(groups: &[Vec<&astr>]) -> usize {
+pub fn pt1(groups: &[Vec<&str>]) -> usize {
     let mut set = HashSet::new();
-    groups.iter()
+    groups
+        .iter()
         .map(|group| {
             set.clear();
             set.extend(group.iter().flat_map(|person| person.chars()));
@@ -14,9 +15,10 @@ pub fn pt1(groups: &[Vec<&astr>]) -> usize {
         .sum()
 }
 
-pub fn pt2(groups: &[Vec<&astr>]) -> usize {
+pub fn pt2(groups: &[Vec<&str>]) -> usize {
     let mut map = HashMap::new();
-    groups.iter()
+    groups
+        .iter()
         .map(|group| {
             map.clear();
             for question in group.iter().flat_map(|person| person.chars()) {
@@ -27,16 +29,15 @@ pub fn pt2(groups: &[Vec<&astr>]) -> usize {
         .sum()
 }
 
-pub fn parse(input: &astr) -> Vec<Vec<&astr>> {
-    use framework::parser::*;
+pub fn parse(input: &str) -> Vec<Vec<&str>> {
     input
-        .split_str(astr!(b"\n\n"))
-        .map(|group| group.split(achar::LineFeed).collect())
+        .split("\n\n")
+        .map(|group| group.split('\n').collect())
         .collect()
 }
 
 #[cfg(test)]
-const EXAMPLE: &[u8] = b"abc
+const EXAMPLE: &str = "abc
 
 a
 b

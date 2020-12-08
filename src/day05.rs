@@ -54,18 +54,18 @@ pub fn pt2(input: &[SeatCode]) -> Result<u32> {
         .ok_or(Error::NoSolution)
 }
 
-pub fn parse(input: &astr) -> Result<Vec<SeatCode>> {
+pub fn parse(input: &str) -> Result<Vec<SeatCode>> {
     use framework::parser::*;
-    fn row(input: &astr) -> IResult<Partition> {
+    fn row(input: &str) -> IResult<Partition> {
         alt((
-            map(char(achar::F), |_| Partition::Low),
-            map(char(achar::B), |_| Partition::High),
+            map(char('F'), |_| Partition::Low),
+            map(char('B'), |_| Partition::High),
         ))(input)
     }
-    fn column(input: &astr) -> IResult<Partition> {
+    fn column(input: &str) -> IResult<Partition> {
         alt((
-            map(char(achar::L), |_| Partition::Low),
-            map(char(achar::R), |_| Partition::High),
+            map(char('L'), |_| Partition::Low),
+            map(char('R'), |_| Partition::High),
         ))(input)
     }
 
@@ -78,7 +78,7 @@ pub fn parse(input: &astr) -> Result<Vec<SeatCode>> {
         row,
         column,
     });
-    separated_list1(char(achar::LineFeed), seat_code)(input).into_result()
+    separated_list1(char('\n'), seat_code)(input).into_result()
 }
 
 standard_tests!(

@@ -12,7 +12,6 @@
 
 pub use paste::paste;
 
-pub mod ascii;
 pub mod bootstrap;
 pub mod error;
 pub mod iter;
@@ -20,8 +19,6 @@ pub mod num;
 pub mod parser;
 pub mod test;
 pub mod traits;
-
-use crate::ascii::*;
 
 use std::{
     fs,
@@ -31,7 +28,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) {
+pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), error::Error> {
     let session_key = &mut SessionKey::default();
     let throttle = &mut RequestThrottle::default();
 
@@ -45,15 +42,9 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) {
         }
 
         let day_nr = day.nr();
-        let mut input = match get_day_input(throttle, session_key, day_nr) {
-            Some(x) => x,
-            None => {
-                eprintln!("couldn't get input for day {:0>2}", day_nr);
-                continue;
-            }
-        };
+        let mut input = get_day_input(throttle, session_key, day_nr)?;
 
-        if input.last() == Some(achar::LineFeed) {
+        if input.chars().last() == Some('\n') {
             input.pop();
         }
 
@@ -69,6 +60,8 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) {
             }
         }
     }
+
+    Ok(())
 }
 
 fn get_session_key(session_key: &mut SessionKey) -> io::Result<&str> {
@@ -94,17 +87,24 @@ struct SessionKey(Option<String>);
 #[derive(Default)]
 struct RequestThrottle(Option<Instant>);
 
+fn is_valid_input(input: &str) -> bool {
+    input
+        .chars()
+        .all(|c| c.is_ascii() && !c.is_ascii_control() || c == '\n')
+}
+
 fn get_day_input(
     throttle: &mut RequestThrottle,
     session_key: &mut SessionKey,
     day_nr: u32,
-) -> Option<AString> {
+) -> Result<String, error::Error> {
     let file_path = get_day_input_path(day_nr);
     if let Some(contents) = fs::read(&file_path)
         .ok()
-        .and_then(|x| AString::from_ascii(x).ok())
+        .and_then(|input| String::from_utf8(input).ok())
+        .filter(|input| is_valid_input(&input))
     {
-        return Some(contents);
+        return Ok(contents);
     }
 
     let now = Instant::now();
@@ -115,16 +115,7 @@ fn get_day_input(
         }
     }
 
-    let session_key = match get_session_key(session_key) {
-        Ok(x) => x,
-        Err(err) => {
-            eprintln!(
-                "couldn't read session key from file \"token.txt\":\n{}",
-                err
-            );
-            return None;
-        }
-    };
+    let session_key = get_session_key(session_key)?;
     throttle.0 = Some(now);
 
     let resp = ureq::get(&format!(
@@ -135,25 +126,21 @@ fn get_day_input(
     .timeout(Duration::from_secs(5))
     .call();
 
-    if let Some(err) = resp.synthetic_error() {
-        eprintln!("error in network request: {}", err);
-        return None;
+    if let Some(_err) = resp.synthetic_error() {
+        return Err(error::Error::NetworkError);
     }
 
     let mut contents = Vec::new();
-    resp.into_reader().read_to_end(&mut contents).ok()?;
-    let contents = match AString::from_ascii(contents) {
-        Ok(contents) => contents,
-        Err(_) => {
-            eprintln!("response contains invalid ASCII character(s)");
-            return None;
-        }
-    };
+    resp.into_reader().read_to_end(&mut contents)?;
+    let contents = String::from_utf8(contents)
+        .ok()
+        .filter(|input| is_valid_input(&input))
+        .ok_or(error::Error::InvalidInput("invalid characters in input"))?;
 
     let mut dir_path = file_path.clone();
     dir_path.pop();
     let _ = fs::create_dir_all(dir_path);
     let _ = fs::write(file_path, &contents);
 
-    Some(contents)
+    Ok(contents)
 }

@@ -2,21 +2,14 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 day!(4, parse => pt1, pt2);
 
-type Passport<'a> = HashMap<&'a astr, &'a astr>;
+type Passport<'a> = HashMap<&'a str, &'a str>;
 
 lazy_static! {
-    static ref EXPECTED_FIELDS: HashSet<&'static astr> = [
-        astr!(b"byr"),
-        astr!(b"iyr"),
-        astr!(b"eyr"),
-        astr!(b"hgt"),
-        astr!(b"hcl"),
-        astr!(b"ecl"),
-        astr!(b"pid"),
-    ]
-    .iter()
-    .cloned()
-    .collect::<HashSet<_>>();
+    static ref EXPECTED_FIELDS: HashSet<&'static str> =
+        ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid",]
+            .iter()
+            .cloned()
+            .collect::<HashSet<_>>();
 }
 
 fn has_expected_fields(passport: &Passport) -> bool {
@@ -26,7 +19,7 @@ fn has_expected_fields(passport: &Passport) -> bool {
     included_count == EXPECTED_FIELDS.len()
 }
 
-fn is_number_in_range(str: &astr, low: u32, high: u32) -> bool {
+fn is_number_in_range(str: &str, low: u32, high: u32) -> bool {
     use framework::parser::*;
     take_u32(str)
         .into_result()
@@ -82,18 +75,15 @@ pub fn pt2(input: &[Passport]) -> usize {
     input.iter().count_if(is_valid_passport)
 }
 
-pub fn parse(input: &astr) -> Result<Vec<Passport>> {
+pub fn parse(input: &str) -> Result<Vec<Passport>> {
     use framework::parser::*;
-    let is_value_char = |char: achar| !char.is_ascii_whitespace() && char != achar::Colon;
+    let is_value_char = |c: char| !c.is_ascii_whitespace() && c != ':';
     let key_value_pair = pair(
-        terminated(take_while1(is_value_char), char(achar::Colon)),
+        terminated(take_while1(is_value_char), char(':')),
         take_while1(is_value_char),
     );
     let passport = fold_many1(
-        terminated(
-            key_value_pair,
-            opt(alt((char(achar::Space), char(achar::LineFeed)))),
-        ),
+        terminated(key_value_pair, opt(alt((char(' '), char('\n'))))),
         HashMap::new(),
         |mut map, (key, value)| {
             map.insert(key, value);
@@ -104,17 +94,16 @@ pub fn parse(input: &astr) -> Result<Vec<Passport>> {
 }
 
 #[cfg(test)]
-const PARSE_EXAMPLE: &'static astr = astr!(
-    b"ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
+const PARSE_EXAMPLE: &str = "\
+ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
 byr:1937 iyr:2017 cid:147 hgt:183cm
 
 iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884
-hcl:#cfa07d byr:1929"
-);
+hcl:#cfa07d byr:1929";
 
 #[cfg(test)]
-const EXAMPLE: &'static astr = astr!(
-    b"ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
+const EXAMPLE: &str = "\
+ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
 byr:1937 iyr:2017 cid:147 hgt:183cm
 
 iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884
@@ -126,31 +115,30 @@ ecl:brn pid:760753108 byr:1931
 hgt:179cm
 
 hcl:#cfa07d eyr:2025 pid:166559648
-iyr:2011 ecl:brn hgt:59in"
-);
+iyr:2011 ecl:brn hgt:59in";
 
 standard_tests!(
     parse [
         PARSE_EXAMPLE => vec![
             vec![
-                (astr!(b"ecl"), astr!(b"gry")),
-                (astr!(b"pid"), astr!(b"860033327")),
-                (astr!(b"eyr"), astr!(b"2020")),
-                (astr!(b"hcl"), astr!(b"#fffffd")),
-                (astr!(b"byr"), astr!(b"1937")),
-                (astr!(b"iyr"), astr!(b"2017")),
-                (astr!(b"cid"), astr!(b"147")),
-                (astr!(b"hgt"), astr!(b"183cm")),
-            ].into_iter().collect::<HashMap<&astr, &astr>>(),
+                ("ecl", "gry"),
+                ("pid", "860033327"),
+                ("eyr", "2020"),
+                ("hcl", "#fffffd"),
+                ("byr", "1937"),
+                ("iyr", "2017"),
+                ("cid", "147"),
+                ("hgt", "183cm"),
+            ].into_iter().collect::<HashMap<&str, &str>>(),
             vec![
-                (astr!(b"iyr"), astr!(b"2013")),
-                (astr!(b"ecl"), astr!(b"amb")),
-                (astr!(b"cid"), astr!(b"350")),
-                (astr!(b"eyr"), astr!(b"2023")),
-                (astr!(b"pid"), astr!(b"028048884")),
-                (astr!(b"hcl"), astr!(b"#cfa07d")),
-                (astr!(b"byr"), astr!(b"1929")),
-            ].into_iter().collect::<HashMap<&astr, &astr>>()
+                ("iyr", "2013"),
+                ("ecl", "amb"),
+                ("cid", "350"),
+                ("eyr", "2023"),
+                ("pid", "028048884"),
+                ("hcl", "#cfa07d"),
+                ("byr", "1929"),
+            ].into_iter().collect::<HashMap<&str, &str>>()
         ]
     ]
     pt1 [ EXAMPLE => 2 ]

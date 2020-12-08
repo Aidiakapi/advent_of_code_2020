@@ -1,7 +1,6 @@
 pub use data_structures::{vec2, vec3, vector::*};
 pub use framework::{
-    ascii::{achar, astr, AString, AsciiStrExt},
-    astr, day,
+    day,
     error::{Error, Result},
     iter::*,
     parser, standard_tests,
