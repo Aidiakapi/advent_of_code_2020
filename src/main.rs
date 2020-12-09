@@ -1,4 +1,4 @@
-#![feature(box_syntax, never_type)]
+#![feature(array_windows, box_syntax, never_type, min_const_generics)]
 
 mod prelude;
 
@@ -11,4 +11,5 @@ framework::main! {
     day06
     day07
     day08
+    day09
 }
