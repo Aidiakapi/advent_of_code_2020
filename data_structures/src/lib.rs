@@ -1,2 +1,2 @@
-#![feature(optin_builtin_traits, negative_impls)]
+#![feature(auto_traits, negative_impls)]
 pub mod vector;

@@ -30,6 +30,7 @@ jobs:
     - name: Run
       uses: actions-rs/cargo@v1
       with:
-        command: build --release
+        command: run
+        args: --release
       env:
         CLICOLOR_FORCE: 1

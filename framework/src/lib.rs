@@ -1,4 +1,5 @@
 #![feature(
+    auto_traits,
     const_fn_fn_ptr_basics,
     const_fn_transmute,
     const_fn,
@@ -7,7 +8,6 @@
     const_raw_ptr_deref,
     negative_impls,
     never_type,
-    optin_builtin_traits
 )]
 
 pub use paste::paste;
