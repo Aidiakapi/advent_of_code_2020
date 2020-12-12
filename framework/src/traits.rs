@@ -47,3 +47,29 @@ pub trait Day {
     fn nr(&self) -> u32;
     fn evaluate(&self, input: String) -> ArrayVec<[(&'static str, Result<String, Error>); 2]>;
 }
+
+pub trait ResultWhereValueIsErrorExt {
+    type Type;
+    fn unwrap_either(self) -> Self::Type;
+}
+
+impl<T> ResultWhereValueIsErrorExt for std::result::Result<T, T> {
+    type Type = T;
+    fn unwrap_either(self) -> T {
+        match self {
+            Ok(x) => x,
+            Err(x) => x,
+        }
+    }
+}
+
+impl<'a, T> ResultWhereValueIsErrorExt for &'a std::result::Result<T, T> {
+    type Type = &'a T;
+
+    fn unwrap_either(self) -> Self::Type {
+        match self {
+            Ok(x) => x,
+            Err(x) => x,
+        }
+    }
+}

@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
 pub struct Vec2<T> {
     pub x: T,
@@ -239,6 +241,99 @@ impl<T> From<Vec3<T>> for (T, T, T) {
     }
 }
 
+// From/Into conversions
+pub auto trait NotEq {}
+impl<T, U> !NotEq for (T, U) {}
+
+impl<T, U> From<Vec2<T>> for Vec2<U>
+where
+    U: From<T>,
+    (T, U): NotEq,
+{
+    fn from(input: Vec2<T>) -> Self {
+        Self {
+            x: U::from(input.x),
+            y: U::from(input.y),
+        }
+    }
+}
+
+impl<T, U> TryFrom<Vec2<T>> for Vec2<U>
+where
+    U: TryFrom<T>,
+    (T, U): NotEq,
+{
+    type Error = U::Error;
+
+    fn try_from(input: Vec2<T>) -> Result<Self, Self::Error> {
+        Ok(Self {
+            x: U::try_from(input.x)?,
+            y: U::try_from(input.y)?,
+        })
+    }
+}
+
+impl<T, U> From<Vec3<T>> for Vec3<U>
+where
+    U: From<T>,
+    (T, U): NotEq,
+{
+    fn from(input: Vec3<T>) -> Self {
+        Self {
+            x: U::from(input.x),
+            y: U::from(input.y),
+            z: U::from(input.z),
+        }
+    }
+}
+
+impl<T, U> TryFrom<Vec3<T>> for Vec3<U>
+where
+    U: TryFrom<T>,
+    (T, U): NotEq,
+{
+    type Error = U::Error;
+
+    fn try_from(input: Vec3<T>) -> Result<Self, Self::Error> {
+        Ok(Self {
+            x: U::try_from(input.x)?,
+            y: U::try_from(input.y)?,
+            z: U::try_from(input.z)?,
+        })
+    }
+}
+
+// Casting
+macro_rules! impl_cast {
+    ($($prim:ident $from_fn:ident,)+) => {
+        $(
+            impl Vec2<$prim> {
+                pub fn cast<U: num::FromPrimitive>(self) -> Option<Vec2<U>> {
+                    Some(Vec2::<U> {
+                        x: U::$from_fn(self.x)?,
+                        y: U::$from_fn(self.y)?,
+                    })
+                }
+            }
+        )+
+    }
+}
+
+impl_cast!(
+    u8    from_u8,
+    u16   from_u16,
+    u32   from_u32,
+    u64   from_u64,
+    u128  from_u128,
+    usize from_usize,
+    i8    from_i8,
+    i16   from_i16,
+    i32   from_i32,
+    i64   from_i64,
+    i128  from_i128,
+    isize from_isize,
+);
+
 // Int vector extensions
 pub trait IntVec2: Sized {
     /// Gets the neighbors in the cardinal directions: N, E, S, W
@@ -252,7 +347,7 @@ pub trait IntVec2: Sized {
 
 impl<T> IntVec2 for Vec2<T>
 where
-    T : num::PrimInt
+    T: num::PrimInt,
 {
     fn neighbors_cardinal(self) -> [Self; 4] {
         [

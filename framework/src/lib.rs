@@ -20,6 +20,7 @@ pub mod parser;
 pub mod test;
 pub mod traits;
 
+use arrayvec::ArrayVec;
 use std::{
     fs,
     io::{self, Read},
@@ -27,6 +28,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use traits::ResultWhereValueIsErrorExt;
 
 pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), error::Error> {
     use colored::Colorize;
@@ -57,22 +59,46 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), erro
             input.pop();
         }
 
+        let start_time = std::time::Instant::now();
         let results = day.evaluate(input);
-        for result in results {
-            let day_ident = format!("day{:0>2}", day_nr).bright_blue();
-            let pt_ident = result.0.bright_green();
-            match result.1 {
-                Ok(value) => {
-                    let value = value.bright_white().bold();
-                    let separator = if value.contains('\n') { '\n' } else { ' ' };
-                    println!("{} {}{}{}", day_ident, pt_ident, separator, value);
-                }
-                Err(err) => {
-                    let value = err.to_string().bright_red().bold().underline();
-                    let separator = if value.contains('\n') { '\n' } else { ' ' };
-                    eprintln!("{} {}{}{}", day_ident, pt_ident, separator, value);
-                }
+        let duration = std::time::Instant::now() - start_time;
+
+        const MAX_VALUE_LENGTH: usize = 16;
+
+        let results: ArrayVec<[_; 2]> = results
+            .into_iter()
+            .map(|(pt_name, result)| (pt_name, result.map_err(|err| err.to_string())))
+            .collect();
+        let use_expanded_format = results.iter().any(|(_, result)| {
+            let value = result.unwrap_either();
+            value.len() > MAX_VALUE_LENGTH || value.contains('\n')
+        });
+
+        print!(
+            "{} ({}ms)",
+            format!("day{:0>2}", day_nr).bright_blue(),
+            format!("{:0>4}", duration.as_millis()).bright_white(),
+        );
+        if use_expanded_format {
+            println!();
+        } else {
+            print!(" |");
+        }
+
+        for (pt_name, result) in results {
+            let pt_ident = pt_name.bright_green();
+            let value = match result {
+                Ok(value) => value.bright_white().bold(),
+                Err(err) => err.bright_red().bold().underline(),
+            };
+            if use_expanded_format {
+                println!("{}\n{}", pt_ident, value);
+            } else {    
+                print!(" {} {:>width$} |", pt_ident, value, width = MAX_VALUE_LENGTH);
             }
+        }
+        if !use_expanded_format {
+            println!();
         }
     }
 
