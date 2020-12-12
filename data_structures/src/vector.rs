@@ -14,12 +14,18 @@ pub struct Vec3<T> {
 // Construction
 #[macro_export]
 macro_rules! vec2 {
+    ($s:expr) => {
+        Vec2::new($s, $s)
+    };
     ($x:expr, $y:expr) => {
         Vec2::new($x, $y)
     };
 }
 #[macro_export]
 macro_rules! vec3 {
+    ($s:expr) => {
+        Vec3::new($s, $s, $s)
+    };
     ($x:expr, $y:expr, $z:expr) => {
         Vec3::new($x, $y, $z)
     };

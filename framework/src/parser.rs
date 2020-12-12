@@ -2,7 +2,7 @@ use crate::num::PrimIntExt;
 pub use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
-    character::complete::{alpha1, anychar, char},
+    character::complete::{alpha1, anychar, char, one_of},
     combinator::{map, map_res, opt},
     multi::{fold_many0, fold_many1, many0, many1, separated_list1},
     sequence::{pair, preceded, terminated, tuple},
