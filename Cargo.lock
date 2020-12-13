@@ -10,7 +10,7 @@ dependencies = [
  "itertools",
  "lazy_static",
  "nom",
- "num-traits",
+ "num",
 ]
 
 [[package]]

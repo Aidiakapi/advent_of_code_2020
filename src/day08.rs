@@ -1,4 +1,4 @@
-use num_traits::ToPrimitive;
+use num::ToPrimitive;
 
 use crate::prelude::*;
 day!(8, parse => pt1, pt2);
