@@ -34,7 +34,7 @@ pub fn pt2(opcodes: &[Opcode]) -> u64 {
     let mut or_mask = 0;
     let mut and_mask = 0;
     let mut floating_or_masks = Vec::new();
-    let mut temp = Vec::new();
+    let mut floating_or_masks_backbuffer = Vec::new();
     
     let mut memory = HashMap::new();
     for &opcode in opcodes {
@@ -45,13 +45,13 @@ pub fn pt2(opcodes: &[Opcode]) -> u64 {
                 let mut remaining_mask = !mask & BIT_SIZE_MASK;
                 let mut current_bit = 1;
                 while remaining_mask != 0 {
-                    // This is a floating bit
                     if remaining_mask & 1 == 1 {
-                        temp.clear();
-                        temp.extend(floating_or_masks.iter().cloned());
-                        for &address in temp.iter() {
-                            floating_or_masks.push(address | current_bit);
+                        floating_or_masks_backbuffer.clear();
+                        for &floating_or_mask in &floating_or_masks {
+                            floating_or_masks_backbuffer.push(floating_or_mask);
+                            floating_or_masks_backbuffer.push(floating_or_mask | current_bit);
                         }
+                        std::mem::swap(&mut floating_or_masks, &mut floating_or_masks_backbuffer);
                     }
                     remaining_mask >>= 1;
                     current_bit <<= 1;
