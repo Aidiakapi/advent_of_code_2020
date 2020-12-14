@@ -19,10 +19,17 @@ pub struct AocParseError<'s>(&'s str, AocErrorKind);
 pub enum AocErrorKind {
     NotFullyParsed,
     Nom(ErrorKind),
-    TakeUnsigned(&'static str),
-    TakeSigned(&'static str),
+    TakeUnsigned(TakeIntErrorKind),
+    TakeSigned(TakeIntErrorKind),
     Whitespace,
     Char,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum TakeIntErrorKind {
+    Empty,
+    Overflow,
+    InvalidCharacter,
 }
 
 impl<'s> nom::error::ParseError<&'s str> for AocParseError<'s> {
@@ -64,14 +71,6 @@ impl<'a, T> ParseResultToResult for IResult<'a, T> {
     }
 }
 
-// pub fn newline0(input: &astr) -> IResult<&astr> {
-//     split_at_position_complete(input, |item| item != achar::LineFeed)
-// }
-
-// pub fn newline1(input: &astr) -> IResult<&astr> {
-//     split_at_position1_complete(input, |item| item != achar::LineFeed, ErrorKind::TakeWhile1)
-// }
-
 pub fn whitespace0(input: &str) -> IResult<&str> {
     input.split_at_position_complete(|item| !item.is_whitespace())
 }
@@ -88,6 +87,7 @@ macro_rules! impl_take_uint {
             $(
                 pub fn [<take_ $ty_ident>]<'a>(input: &'a str) -> IResult<'a, $ty_ident> {
                     take_unsigned::<$ty_ident>(input)
+                        .map_err(|err| nom::Err::Error(AocParseError(input, AocErrorKind::TakeUnsigned(err))))
                 }
             )+
         }
@@ -100,6 +100,7 @@ macro_rules! impl_take_sint {
             $(
                 pub fn [<take_ $ty_ident>]<'a>(input: &'a str) -> IResult<'a, $ty_ident> {
                     take_signed::<$ty_ident>(input)
+                        .map_err(|err| nom::Err::Error(AocParseError(input, AocErrorKind::TakeSigned(err))))
                 }
             )+
         }
@@ -109,18 +110,12 @@ macro_rules! impl_take_sint {
 impl_take_uint!(u8, u16, u32, u64, u128, usize);
 impl_take_sint!(i8, i16, i32, i64, i128, isize);
 
-pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &str) -> IResult<T> {
+fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &str) -> Result<(&str, T), TakeIntErrorKind> {
     if input.is_empty() {
-        return Err(nom::Err::Error(AocParseError(
-            input,
-            AocErrorKind::TakeUnsigned("empty slice parsed as int"),
-        )));
+        return Err(TakeIntErrorKind::Empty);
     }
-    let overflow_error = nom::Err::Error(AocParseError(
-        input,
-        AocErrorKind::TakeUnsigned("overflow parsing number"),
-    ));
     let mut nr = T::zero();
+    let original_length = input.len();
     while let Some(char) = input.chars().next() {
         if char < '0' || char > '9' {
             break;
@@ -128,34 +123,23 @@ pub fn take_unsigned<T: PrimIntExt + Unsigned>(mut input: &str) -> IResult<T> {
         let digit = char as u8 - b'0';
         nr = nr
             .checked_mul(&T::from(10u8).unwrap())
-            .ok_or_else(|| overflow_error.clone())?
+            .ok_or(TakeIntErrorKind::Overflow)?
             .checked_add(&T::from(digit).unwrap())
-            .ok_or_else(|| overflow_error.clone())?;
+            .ok_or(TakeIntErrorKind::Overflow)?;
         input = &input[1..];
     }
-    Ok((input, nr))
+    if input.len() == original_length {
+        Err(TakeIntErrorKind::InvalidCharacter)
+    } else {
+        Ok((input, nr))
+    }
 }
 
-fn unsigned_err_to_signed_err<'a>(err: nom::Err<AocParseError<'a>>) -> nom::Err<AocParseError<'a>> {
-    err.map(|AocParseError(input, err)| {
-        AocParseError(
-            input,
-            match err {
-                AocErrorKind::TakeUnsigned(message) => AocErrorKind::TakeSigned(message),
-                x => x,
-            },
-        )
-    })
-}
-
-pub fn take_signed<T: PrimIntExt + Signed>(input: &str) -> IResult<T> {
+fn take_signed<T: PrimIntExt + Signed>(input: &str) -> Result<(&str, T), TakeIntErrorKind> {
     let first_char = if let Some(first_char) = input.chars().next() {
         first_char
     } else {
-        return Err(nom::Err::Error(AocParseError(
-            input,
-            AocErrorKind::TakeSigned("empty slice parsed as int"),
-        )));
+        return Err(TakeIntErrorKind::Empty);
     };
     let is_negative = first_char == '-';
     let (remainder, mut unsigned) =
@@ -163,16 +147,12 @@ pub fn take_signed<T: PrimIntExt + Signed>(input: &str) -> IResult<T> {
             &input[1..]
         } else {
             input
-        })
-        .map_err(unsigned_err_to_signed_err)?;
+        })?;
     if is_negative {
         unsigned = unsigned.wrapping_sub(&T::Unsigned::one());
     }
     if unsigned >= (T::Unsigned::one() << (T::Unsigned::BITS - 1)) {
-        return Err(nom::Err::Error(AocParseError(
-            input,
-            AocErrorKind::TakeSigned("overflow parsing number"),
-        )));
+        return Err(TakeIntErrorKind::Overflow);
     }
     if is_negative {
         unsigned = !unsigned;
@@ -188,13 +168,39 @@ mod test {
     fn take_uint() {
         assert_eq!(take_u8("0"), Ok(("", 0u8)));
         assert_eq!(take_u8("128"), Ok(("", 128u8)));
-        assert!(take_u8("256").is_err());
+        assert_eq!(
+            take_u8("256"),
+            Err(nom::Err::Error(AocParseError(
+                "256",
+                AocErrorKind::TakeUnsigned(TakeIntErrorKind::Overflow)
+            )))
+        );
+        assert_eq!(
+            take_u8("x256"),
+            Err(nom::Err::Error(AocParseError(
+                "x256",
+                AocErrorKind::TakeUnsigned(TakeIntErrorKind::InvalidCharacter)
+            )))
+        );
     }
 
     #[test]
     fn take_sint() {
         assert_eq!(take_i8("-128"), Ok(("", -128i8)));
         assert_eq!(take_i8("127"), Ok(("", 127i8)));
-        assert!(take_i8("128").is_err());
+        assert_eq!(
+            take_i8("128"),
+            Err(nom::Err::Error(AocParseError(
+                "128",
+                AocErrorKind::TakeSigned(TakeIntErrorKind::Overflow)
+            )))
+        );
+        assert_eq!(
+            take_i8("x128"),
+            Err(nom::Err::Error(AocParseError(
+                "x128",
+                AocErrorKind::TakeSigned(TakeIntErrorKind::InvalidCharacter)
+            )))
+        );
     }
 }
