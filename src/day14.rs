@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use crate::prelude::*;
+
 day!(14, parse => pt1, pt2);
 
 const BIT_SIZE_MASK: u64 = (1u64 << 36) - 1;
@@ -17,11 +16,11 @@ pub fn pt1(opcodes: &[Opcode]) -> u64 {
     let mut memory = HashMap::new();
     for &opcode in opcodes {
         match opcode {
-            Opcode::Mask {mask, value} => {
+            Opcode::Mask { mask, value } => {
                 current_mask = mask;
                 current_mask_value = value;
             }
-            Opcode::Assign {address, value} => {
+            Opcode::Assign { address, value } => {
                 let value = (value & !current_mask) | current_mask_value;
                 memory.insert(address, value);
             }
@@ -35,11 +34,11 @@ pub fn pt2(opcodes: &[Opcode]) -> u64 {
     let mut and_mask = 0;
     let mut floating_or_masks = Vec::new();
     let mut floating_or_masks_backbuffer = Vec::new();
-    
+
     let mut memory = HashMap::new();
     for &opcode in opcodes {
         match opcode {
-            Opcode::Mask {mask, value} => {
+            Opcode::Mask { mask, value } => {
                 floating_or_masks.clear();
                 floating_or_masks.push(0);
                 let mut remaining_mask = !mask & BIT_SIZE_MASK;
@@ -59,7 +58,7 @@ pub fn pt2(opcodes: &[Opcode]) -> u64 {
                 or_mask = value;
                 and_mask = mask;
             }
-            Opcode::Assign {address, value} => {
+            Opcode::Assign { address, value } => {
                 let address = (address & and_mask) | or_mask;
                 for &floating_or_mask in &floating_or_masks {
                     memory.insert(address | floating_or_mask, value);

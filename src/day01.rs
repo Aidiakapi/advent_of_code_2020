@@ -1,4 +1,5 @@
 use crate::prelude::*;
+
 day!(1, parse_and_sort => pt1, pt2);
 
 /// Finds two numbers that sum to a target value, and returns the product of

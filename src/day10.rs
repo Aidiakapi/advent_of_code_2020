@@ -1,17 +1,17 @@
 use crate::prelude::*;
+
 day!(10, parse => pt1, pt2);
 
 pub fn pt1(input: &[u32]) -> u32 {
     let input = add_endpoints_and_sort(input);
-    let (delta1, delta3) = input
-        .array_windows()
-        .fold((0, 0), |acc: (u32, u32), &[a, b]: &[u32; 2]| {
-            match b - a {
+    let (delta1, delta3) =
+        input
+            .array_windows()
+            .fold((0, 0), |acc: (u32, u32), &[a, b]: &[u32; 2]| match b - a {
                 1 => (acc.0 + 1, acc.1),
                 3 => (acc.0, acc.1 + 1),
                 _ => acc,
-            }
-        });
+            });
     delta1 * delta3
 }
 

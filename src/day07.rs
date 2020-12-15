@@ -1,6 +1,5 @@
-use std::collections::{HashMap, HashSet};
-
 use crate::prelude::*;
+
 day!(7, parse => pt1, pt2);
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]

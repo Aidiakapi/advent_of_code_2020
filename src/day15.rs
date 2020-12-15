@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use crate::prelude::*;
+
 day!(15, parse => pt1, pt2);
 
 fn pts<const GOAL_TURN: u32>(input: &[u32]) -> u32 {
@@ -9,13 +8,16 @@ fn pts<const GOAL_TURN: u32>(input: &[u32]) -> u32 {
     for (i, &number) in input.iter().enumerate().take(input.len() - 1) {
         last_seen_at.insert(number, (i + 1) as u32);
     }
-    
+
     let mut previous_number = *input.last().unwrap();
     let mut previous_turn = input.len() as u32;
 
     loop {
         // Consider the last number, and the time we've seen it before then
-        let current_turn_number = last_seen_at.get(&previous_number).map(|&v| previous_turn - v).unwrap_or(0);
+        let current_turn_number = last_seen_at
+            .get(&previous_number)
+            .map(|&v| previous_turn - v)
+            .unwrap_or(0);
         last_seen_at.insert(previous_number, previous_turn);
         previous_turn += 1;
         if previous_turn == GOAL_TURN {

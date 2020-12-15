@@ -1,6 +1,6 @@
+use crate::prelude::*;
 use arrayvec::ArrayVec;
 
-use crate::prelude::*;
 day!(11, parse => pt1, pt2);
 
 #[derive(Copy, Clone, Eq, PartialEq)]

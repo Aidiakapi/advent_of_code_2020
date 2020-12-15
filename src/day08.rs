@@ -1,6 +1,6 @@
+use crate::prelude::*;
 use num::ToPrimitive;
 
-use crate::prelude::*;
 day!(8, parse => pt1, pt2);
 
 pub type Int = i64;

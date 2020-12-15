@@ -1,6 +1,6 @@
+use crate::prelude::*;
 use std::cmp::Ordering;
 
-use crate::prelude::*;
 day!(9, parse => pt1, pt2);
 
 fn find_first_invalid_number<const PREAMBLE_PLUS_ONE: usize>(input: &[u64]) -> Option<u64> {

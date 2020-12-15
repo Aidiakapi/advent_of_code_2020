@@ -1,4 +1,5 @@
 use crate::prelude::*;
+
 day!(12, parse => pt1, pt2);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

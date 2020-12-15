@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::{HashMap, HashSet};
+
 day!(4, parse => pt1, pt2);
 
 type Passport<'a> = HashMap<&'a str, &'a str>;

@@ -1,3 +1,4 @@
+pub use ahash::{AHashMap as HashMap, AHashSet as HashSet};
 pub use data_structures::{vec2, vec3, vector::*};
 pub use framework::{
     day,

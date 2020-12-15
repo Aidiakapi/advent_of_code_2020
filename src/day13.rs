@@ -1,4 +1,5 @@
 use crate::prelude::*;
+
 day!(13, parse => pt1, pt2);
 
 pub fn pt1((current_time, bus_lines): &(u64, Vec<Option<u64>>)) -> Result<u64> {

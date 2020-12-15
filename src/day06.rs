@@ -1,6 +1,5 @@
-use std::collections::{HashMap, HashSet};
-
 use crate::prelude::*;
+
 day!(6, parse => pt1, pt2);
 
 pub fn pt1(groups: &[Vec<&str>]) -> usize {
