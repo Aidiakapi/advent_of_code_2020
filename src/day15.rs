@@ -1,24 +1,24 @@
 use crate::prelude::*;
+use std::num::NonZeroUsize;
 
 day!(15, parse => pt1, pt2);
 
-fn pts<const GOAL_TURN: u32>(input: &[u32]) -> u32 {
-    let mut last_seen_at = HashMap::new();
+fn pts<const GOAL_TURN: usize>(input: &[usize]) -> usize {
+    let mut last_seen_at = vec![None; GOAL_TURN as usize];
 
     for (i, &number) in input.iter().enumerate().take(input.len() - 1) {
-        last_seen_at.insert(number, (i + 1) as u32);
+        last_seen_at[number] = NonZeroUsize::new(i + 1);
     }
 
     let mut previous_number = *input.last().unwrap();
-    let mut previous_turn = input.len() as u32;
+    let mut previous_turn = input.len();
 
     loop {
         // Consider the last number, and the time we've seen it before then
-        let current_turn_number = last_seen_at
-            .get(&previous_number)
-            .map(|&v| previous_turn - v)
+        let current_turn_number = last_seen_at[previous_number as usize]
+            .map(|v| previous_turn - v.get())
             .unwrap_or(0);
-        last_seen_at.insert(previous_number, previous_turn);
+        last_seen_at[previous_number] = NonZeroUsize::new(previous_turn);
         previous_turn += 1;
         if previous_turn == GOAL_TURN {
             return current_turn_number;
@@ -27,17 +27,17 @@ fn pts<const GOAL_TURN: u32>(input: &[u32]) -> u32 {
     }
 }
 
-pub fn pt1(input: &[u32]) -> u32 {
+pub fn pt1(input: &[usize]) -> usize {
     pts::<2020>(input)
 }
 
-pub fn pt2(input: &[u32]) -> u32 {
+pub fn pt2(input: &[usize]) -> usize {
     pts::<30000000>(input)
 }
 
-pub fn parse(input: &str) -> Result<Vec<u32>> {
+pub fn parse(input: &str) -> Result<Vec<usize>> {
     use framework::parser::*;
-    separated_list1(char(','), take_u32)(input).into_result()
+    separated_list1(char(','), take_usize)(input).into_result()
 }
 
 standard_tests!(
