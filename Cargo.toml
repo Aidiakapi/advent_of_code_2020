@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 ahash = "0.6"
 arrayvec = "0.5"
+bitvec = "0.19"
 itertools = "0.9"
 lazy_static = "1.4"
 nom = "6.0"

@@ -6,6 +6,7 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "arrayvec",
+ "bitvec",
  "data_structures",
  "framework",
  "itertools",
