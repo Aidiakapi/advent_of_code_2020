@@ -1,12 +1,12 @@
 use std::convert::TryFrom;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -37,6 +37,14 @@ impl<T> Vec2<T> {
     #[inline]
     pub fn new(x: T, y: T) -> Self {
         Vec2 { x, y }
+    }
+
+    pub fn with_z(self, z: T) -> Vec3<T> {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z,
+        }
     }
 }
 impl<T> Vec3<T> {
@@ -334,22 +342,11 @@ impl_cast!(
     isize from_isize,
 );
 
-// Int vector extensions
-pub trait IntVec2: Sized {
-    /// Gets the neighbors in the cardinal directions: N, E, S, W
-    fn neighbors_cardinal(self) -> [Self; 4];
-    /// Gets the neighbors in the ordinal directions: NE, SE, SW, NW
-    fn neighbors_ordinal(self) -> [Self; 4];
-    /// Gets the neighbors in both the ordinal and cardinal directions:
-    /// N, NE, E, SE, S, SW, W, NW
-    fn neighbors(self) -> [Self; 8];
-}
-
-impl<T> IntVec2 for Vec2<T>
+impl<T> Vec2<T>
 where
     T: num::PrimInt,
 {
-    fn neighbors_cardinal(self) -> [Self; 4] {
+    pub fn neighbors_cardinal(self) -> [Self; 4] {
         [
             Self::new(self.x, self.y + T::one()),
             Self::new(self.x + T::one(), self.y),
@@ -358,7 +355,7 @@ where
         ]
     }
 
-    fn neighbors_ordinal(self) -> [Self; 4] {
+    pub fn neighbors_ordinal(self) -> [Self; 4] {
         [
             Self::new(self.x + T::one(), self.y + T::one()),
             Self::new(self.x + T::one(), self.y - T::one()),
@@ -367,7 +364,7 @@ where
         ]
     }
 
-    fn neighbors(self) -> [Self; 8] {
+    pub fn neighbors(self) -> [Self; 8] {
         [
             Self::new(self.x, self.y + T::one()),
             Self::new(self.x + T::one(), self.y + T::one()),
