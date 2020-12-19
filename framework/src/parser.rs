@@ -3,7 +3,7 @@ pub use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::{alpha1, anychar, char, one_of},
-    combinator::{map, map_res, not, opt},
+    combinator::{map, map_opt, map_res, not, opt},
     multi::{fold_many0, fold_many1, many0, many1, separated_list1},
     sequence::{pair, preceded, terminated, tuple},
 };
@@ -13,7 +13,7 @@ use num_traits::{One, Signed, Unsigned, WrappingSub};
 pub type IResult<'s, T> = nom::IResult<&'s str, T, AocParseError<'s>>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct AocParseError<'s>(&'s str, AocErrorKind);
+pub struct AocParseError<'s>(pub &'s str, pub AocErrorKind);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AocErrorKind {
