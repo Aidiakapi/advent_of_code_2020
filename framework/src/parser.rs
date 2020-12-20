@@ -1,10 +1,10 @@
 use crate::num::PrimIntExt;
 pub use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while1},
+    bytes::complete::{tag, take, take_while1},
     character::complete::{alpha1, anychar, char, one_of},
     combinator::{map, map_opt, map_res, not, opt},
-    multi::{fold_many0, fold_many1, many0, many1, separated_list1},
+    multi::{fold_many0, fold_many1, fold_many_m_n, many0, many1, separated_list1},
     sequence::{pair, preceded, terminated, tuple},
 };
 use nom::{error::ErrorKind, InputTakeAtPosition};
