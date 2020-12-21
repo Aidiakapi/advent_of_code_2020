@@ -3,6 +3,7 @@
     box_syntax,
     const_fn_transmute,
     const_panic,
+    hash_drain_filter,
     min_const_generics,
     never_type
 )]
@@ -30,4 +31,5 @@ framework::main! {
     day18
     day19
     day20
+    day21
 }
