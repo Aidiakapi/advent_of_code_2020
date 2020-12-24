@@ -128,7 +128,7 @@ fn pts<const COUNT: usize, const ITER: usize>(input: &Cups) -> Vec<usize> {
     }
 
     if COUNT == 9 {
-        links[input[8] as usize] = links[0] as usize;
+        links[input[8] as usize] = input[0] as usize;
     } else {
         links[input[8] as usize] = 9;
         for i in 9..COUNT - 1 {

@@ -63,16 +63,15 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), erro
         let results = day.evaluate(input);
         let duration = std::time::Instant::now() - start_time;
 
-        const MAX_VALUE_LENGTH: usize = 16;
+        const VALUE_ALIGNMENT: usize = 16;
 
         let results: ArrayVec<[_; 2]> = results
             .into_iter()
             .map(|(pt_name, result)| (pt_name, result.map_err(|err| err.to_string())))
             .collect();
-        let use_expanded_format = results.iter().any(|(_, result)| {
-            let value = result.unwrap_either();
-            value.len() > MAX_VALUE_LENGTH || value.contains('\n')
-        });
+        let use_expanded_format = results
+            .iter()
+            .any(|(_, result)| result.unwrap_either().contains('\n'));
 
         print!(
             "{} ({}ms)",
@@ -93,8 +92,8 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), erro
             };
             if use_expanded_format {
                 println!("{}\n{}", pt_ident, value);
-            } else {    
-                print!(" {} {:>width$} |", pt_ident, value, width = MAX_VALUE_LENGTH);
+            } else {
+                print!(" {} {:>width$} |", pt_ident, value, width = VALUE_ALIGNMENT);
             }
         }
         if !use_expanded_format {
