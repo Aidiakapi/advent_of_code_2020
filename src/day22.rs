@@ -3,18 +3,18 @@ use std::{cmp::Ordering, collections::VecDeque};
 
 day!(22, parse => pt1, pt2);
 
-type Deck = VecDeque<u32>;
+type Deck = VecDeque<u8>;
 
-fn calculate_score(deck: &Deck) -> u32 {
+fn calculate_score(deck: &Deck) -> u64 {
     deck
     .iter()
     .rev()
     .enumerate()
-    .map(|(i, &c)| (i as u32 + 1) * c)
+    .map(|(i, &c)| (i as u64 + 1) * c as u64)
     .sum()
 }
 
-pub fn pt1(input: &(Deck, Deck)) -> Result<u32> {
+pub fn pt1(input: &(Deck, Deck)) -> Result<u64> {
     let (mut a, mut b) = input.clone();
     while !a.is_empty() && !b.is_empty() {
         let ca = a.pop_front().unwrap();
@@ -35,7 +35,7 @@ pub fn pt1(input: &(Deck, Deck)) -> Result<u32> {
     Ok(calculate_score(winning_player))
 }
 
-pub fn pt2(input: &(Deck, Deck)) -> Result<u32> {
+pub fn pt2(input: &(Deck, Deck)) -> Result<u64> {
     enum Winner {
         Player1(Deck),
         Player2(Deck),
@@ -82,7 +82,7 @@ pub fn parse(input: &str) -> Result<(Deck, Deck)> {
         map(
             preceded(
                 tuple((tag("Player "), one_of("12"), tag(":\n"))),
-                separated_list1(char('\n'), take_u32),
+                separated_list1(char('\n'), take_u8),
             ),
             |v| v.into_iter().collect(),
         )(input)
