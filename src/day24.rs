@@ -55,9 +55,6 @@ pub fn pt2(black_tiles: &BlackTiles) -> usize {
         for (&tile, &black_count) in &neighbor_count {
             if black_count == 2 {
                 black_tiles.entry(tile).or_default();
-            // Condition might seem weird, but if black_count == 0, then it is
-            // guaranteed to be black itself, otherwise it wouldn't have been
-            // added to the collection in the first place.
             } else if black_count == 0 || black_count > 2 {
                 if let Entry::Occupied(slot) = black_tiles.entry(tile) {
                     slot.remove();
