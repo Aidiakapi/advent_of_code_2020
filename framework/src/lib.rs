@@ -7,7 +7,7 @@
     const_ptr_offset,
     const_raw_ptr_deref,
     negative_impls,
-    never_type,
+    never_type
 )]
 
 pub use paste::paste;
@@ -73,10 +73,14 @@ pub fn run(days: &[(&'static str, &'static dyn traits::Day)]) -> Result<(), erro
             .iter()
             .any(|(_, result)| result.unwrap_either().contains('\n'));
 
+        let duration_nanos = duration.as_nanos();
+        let duration_ms = duration_nanos / 1_000_000;
+        let duration_decimals = duration_nanos / 1_000 % 1_000 / 10;
+
         print!(
-            "{} ({}ms)",
+            "{} ({} ms)",
             format!("day{:0>2}", day_nr).bright_blue(),
-            format!("{:0>4}", duration.as_millis()).bright_white(),
+            format!("{: >3}.{:0>2}", duration_ms, duration_decimals).bright_white(),
         );
         if use_expanded_format {
             println!();
